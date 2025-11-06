@@ -1,28 +1,31 @@
+// myapp.dart
+import 'package:a2c2/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'feature/auth/presentation/pages/login_screen.dart';
-import 'feature/auth/presentation/pages/register_screen.dart';
-import 'feature/home/presentation/pages/clients_screen.dart';
-
 import 'package:device_preview/device_preview.dart';
+import 'core/router/app_router.dart';
+import 'core/di/injection.dart';
+import 'feature/auth/presentation/providers/auth_provider.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = getIt<AuthProvider>();
+    final router = AppRouter(authProvider).router;
 
-    return MaterialApp(
-      // locale: DevicePreview.locale(context),
-      // builder: DevicePreview.appBuilder,
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'app practica allClasses',
 
-      title: "Loans App",
-      theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: "/login",
-      routes: {
-        "/login": (_) => const LoginScreen(),
-        "/register": (_) => const RegisterScreen(),
-        "/home": (_) => const ClientsScreen(),
-      },
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
+
+      theme: AppTheme.light(null),
+      darkTheme: AppTheme.dark(null),
+      themeMode: ThemeMode.system,
+
+      routerConfig: router,
     );
   }
 }

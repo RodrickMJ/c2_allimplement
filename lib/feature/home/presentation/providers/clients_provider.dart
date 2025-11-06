@@ -36,9 +36,17 @@ class ClientsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addClientAndLoan(String name, String email, String phone, String direccion, int amount, int term) async {
+  Future<bool> addClientAndLoan(
+    String name,
+    String email,
+    String phone,
+    String direccion,
+    int amount,
+    int term,
+  ) async {
     _loading = true;
     notifyListeners();
+
     try {
       final client = await createClientAndLoan(
         name: name,
@@ -48,13 +56,20 @@ class ClientsProvider with ChangeNotifier {
         amount: amount,
         term: term,
       );
+
       _clients.add(client);
       _error = null;
+
+      _loading = false;
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
+
+      _loading = false;
+      notifyListeners();
+      return false;
     }
-    _loading = false;
-    notifyListeners();
   }
 
   Future<void> removeClient(String id) async {

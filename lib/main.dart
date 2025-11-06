@@ -1,74 +1,50 @@
+// main.dart
+import 'package:a2c2/feature/auth/presentation/providers/auth_provider.dart';
+import 'package:a2c2/feature/home/presentation/providers/clients_provider.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'core/network/http_client.dart';
-
-import 'feature/auth/data/datasource/service_auth.dart';
-import 'feature/auth/data/repository/auth_repository_impl.dart';
-import 'feature/auth/domain/usecase/login.dart';
-import 'feature/auth/domain/usecase/register.dart';
-import 'feature/auth/presentation/providers/auth_provider.dart';
-
-import 'feature/home/data/datasource/service_clients.dart';
-import 'feature/home/data/repository/client_repository_impl.dart';
-import 'feature/home/domain/usecase/get_clients.dart';
-import 'feature/home/domain/usecase/create_client_and_loan.dart';
-import 'feature/home/domain/usecase/delete_client.dart';
-import 'feature/home/presentation/providers/clients_provider.dart';
-
-import 'myapp.dart';
 import 'package:local_session_timeout/local_session_timeout.dart';
-import 'package:device_preview/device_preview.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  final httpClient = HttpClient().client;
+import 'core/di/injection.dart';
+import 'myapp.dart';
 
-  final authService = ServiceAuthImpl(); 
-  final authRepository = AuthRepositoryImpl(authService);
-  final loginUseCase = Login(authRepository);
-  final registerUseCase = Register(authRepository);
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  final clientRemoteDataSource = ClientRemoteDataSourceImpl(
-    client: httpClient,
-    baseUrl: 'https://aspas.space',
+  await configureDependencies();
+
+  final sessionConfig = SessionConfig(
+    invalidateSessionForAppLostFocus: const Duration(seconds: 20),
+    invalidateSessionForUserInactivity: const Duration(seconds: 20),
   );
 
-  final clientRepository = ClientRepositoryImpl(clientRemoteDataSource);
-  final getClientsUseCase = GetClients(clientRepository);
-  final createClientUseCase = CreateClientAndLoan(clientRepository);
-  final deleteClientUseCase = DeleteClient(clientRepository);
-
-   final sessionConfig = SessionConfig(
-    invalidateSessionForAppLostFocus: Duration(seconds: 20),
-    invalidateSessionForUserInactivity: Duration(seconds: 20),
-  );
-
+  // Escucha timeout → logout automático
+  // sessionConfig.stream.listen((event) {
+  //   if (event == SessionTimeoutState.userInactivityTimeout ||
+  //       event == SessionTimeoutState.appLostFocusTimeout ) {
+  //     getIt<AuthProvider>().logout();
+  //   }
+  // });
 
   runApp(
-    MultiProvider(
+    DevicePreview(
+      enabled: kDebugMode,
+      builder: (contex) => MultiProvider(
       providers: [
         Provider<SessionConfig>.value(value: sessionConfig),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(
-            loginUseCase: loginUseCase,
-            registerUseCase: registerUseCase,
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ClientsProvider(
-            getClients: getClientsUseCase,
-            createClientAndLoan: createClientUseCase,
-            deleteClient: deleteClientUseCase,
-          ),
-        ),
-      ],child: SessionTimeoutManager(
+        ChangeNotifierProvider(create: (_) => getIt<AuthProvider>()),
+        ChangeNotifierProvider(create: (_) => getIt<ClientsProvider>()),
+      ],
+      child: SessionTimeoutManager(
         sessionConfig: sessionConfig,
-        child: const MyApp()
-    //      child: DevicePreview(
-    //       enabled: kDebugMode,
-    //       builder: (context) => const MyApp(),
-    // ),
-      )
-    )
+        child: const MyApp(),
+      ),
+    ),
+      
+
+    ),
+    
   );
 }
