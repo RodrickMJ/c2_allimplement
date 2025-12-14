@@ -13,6 +13,7 @@ import 'myapp.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Inicializa dependencias (incluyendo AuthProvider y ClientsProvider)
   await configureDependencies();
 
   final sessionConfig = SessionConfig(
@@ -20,31 +21,20 @@ void main() async {
     invalidateSessionForUserInactivity: const Duration(seconds: 20),
   );
 
-  // Escucha timeout → logout automático
-  // sessionConfig.stream.listen((event) {
-  //   if (event == SessionTimeoutState.userInactivityTimeout ||
-  //       event == SessionTimeoutState.appLostFocusTimeout ) {
-  //     getIt<AuthProvider>().logout();
-  //   }
-  // });
-
   runApp(
     DevicePreview(
       enabled: kDebugMode,
-      builder: (contex) => MultiProvider(
-      providers: [
-        Provider<SessionConfig>.value(value: sessionConfig),
-        ChangeNotifierProvider(create: (_) => getIt<AuthProvider>()),
-        ChangeNotifierProvider(create: (_) => getIt<ClientsProvider>()),
-      ],
-      child: SessionTimeoutManager(
-        sessionConfig: sessionConfig,
-        child: const MyApp(),
+      builder: (context) => MultiProvider(
+        providers: [
+          Provider<SessionConfig>.value(value: sessionConfig),
+          ChangeNotifierProvider(create: (_) => getIt<AuthProvider>()),
+          ChangeNotifierProvider(create: (_) => getIt<ClientsProvider>()),
+        ],
+        child: SessionTimeoutManager(
+          sessionConfig: sessionConfig,
+          child: const MyApp(),
+        ),
       ),
     ),
-      
-
-    ),
-    
   );
 }

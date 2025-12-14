@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'app practica allClasses',
+      title: 'Loans App',  // ← Cambié el título para que coincida con tu app
 
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,

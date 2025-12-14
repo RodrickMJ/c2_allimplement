@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/services/local_auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -16,17 +18,27 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Navegación segura DESPUÉS de que exista el Router
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final auth = context.read<AuthProvider>();
+      // Ejecutamos el código asíncrono de forma segura
+      Future(() async {
+        final auth = context.read<AuthProvider>();
 
-      if (auth.user != null) {
-        context.goNamed(AppRoutes.home);
-      } else {
-        context.goNamed(AppRoutes.login);
-      }
+        if (auth.user != null) {
+          final bool biometricEnabled = await LocalAuthService.isBiometricEnabled();
+          final bool canUseBiometric = await LocalAuthService.canAuthenticate();
+
+          if (biometricEnabled && canUseBiometric) {
+            context.goNamed(AppRoutes.biometricLogin);
+          } else {
+            context.goNamed(AppRoutes.home);
+          }
+        } else {
+          context.goNamed(AppRoutes.login);
+        }
+      });
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
