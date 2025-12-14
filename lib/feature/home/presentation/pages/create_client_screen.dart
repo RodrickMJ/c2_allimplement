@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/clients_provider.dart';
-import '../../../../core/router/app_routes.dart';
 
 class CreateClientScreen extends StatefulWidget {
   const CreateClientScreen({super.key});
-  @override State<CreateClientScreen> createState() => _CreateClientScreenState();
+  @override
+  State<CreateClientScreen> createState() => _CreateClientScreenState();
 }
 
 class _CreateClientScreenState extends State<CreateClientScreen> {
@@ -32,7 +32,8 @@ class _CreateClientScreenState extends State<CreateClientScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ClientsProvider>();
+    // Usamos read() aquí para NO escuchar cambios en todo el widget
+    final provider = context.read<ClientsProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -64,16 +65,29 @@ class _CreateClientScreenState extends State<CreateClientScreen> {
               _buildTextField(_termCtrl, "Plazo (20, 25, 30 días)", Icons.calendar_today, keyboard: TextInputType.number),
               const SizedBox(height: 24),
 
-              if (provider.error != null)
-                Text(provider.error!, style: const TextStyle(color: Colors.red)),
-
-              const SizedBox(height: 16),
-
-              ElevatedButton(
-                onPressed: provider.loading ? null : () => _createClient(provider),
-                child: provider.loading
-                    ? const CircularProgressIndicator()
-                    : const Text("Crear Cliente y Préstamo"),
+              // Aquí usamos Consumer SOLO para la parte que depende del estado del provider
+              Consumer<ClientsProvider>(
+                builder: (context, provider, child) {
+                  return Column(
+                    children: [
+                      if (provider.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            provider.error!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: provider.loading ? null : () => _createClient(provider),
+                        child: provider.loading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text("Crear Cliente y Préstamo"),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -112,7 +126,7 @@ class _CreateClientScreenState extends State<CreateClientScreen> {
       );
 
       if (success && mounted) {
-        context.pop(); // Vuelve a la lista
+        context.pop(); // Vuelve a la lista de clientes
       }
     }
   }

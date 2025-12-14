@@ -11,4 +11,7 @@ class AppRoutes {
   static const String registerPath = '/register';
   static const String homePath = '/';
   static const String createClientPath = '/create-client';
+
+  static const biometricLogin = 'biometricLogin';
+  static const biometricLoginPath = '/biometric-login';
 }
